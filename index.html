@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Malla Interactiva - Ing. Industrial</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff0f5;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #c2185b;
+    }
+    .autor {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #c2185b;
+      margin-top: -1rem;
+      margin-bottom: 1.5rem;
+    }
+    .avance {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .grid-anual {
+      display: flex;
+      gap: 1rem;
+      flex-direction: row;
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+    }
+    .año {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 280px;
+    }
+    .etiqueta-año {
+      background: linear-gradient(135deg, #f06292, #ec407a);
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+    .semestre {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+    .titulo-semestre {
+      background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      text-align: center;
+      color: #ad1457;
+    }
+    .cursos {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .curso {
+      padding: 0.75rem;
+      border-radius: 8px;
+      background-color: #ddd;
+      color: #555;
+      cursor: pointer;
+      box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      text-align: center;
+      font-weight: 500;
+    }
+    .curso.aprobado {
+      background-color: #d1c4e9;
+      color: #4a0072;
+      text-decoration: line-through;
+    }
+    .curso.bloqueado {
+      background-color: #ddd;
+      color: #aaa;
+      pointer-events: none;
+    }
+    .curso.habilitado {
+      background-color: #fde0eb; /* Rmismo rosado que el otro jeje */
+      color: #880e4f;
+    }
+    .curso.credito-habilitado {
+      background-color: #fde0eb; /* Rosado más bajo para habilitados por créditos */
+      color: #880e4f;
+    }
+  </style>
+</head>
+<body>
+  <h1>Malla Interactiva - Ingeniería Industrial</h1>
+  <div class="autor">Autor: Angie Llontop</div>
+  <div class="avance">
+    Avance: <span id="progreso">0%</span> | Créditos: <span id="creditos">0</span>/200
+  </div>
+  <div class="grid-anual" id="malla"></div>
+  <script>
+    const cursos = [
+      { nombre: "Cálculo de una variable", nivel: 1, creditos: 4 },
+      { nombre: "Química General", nivel: 1, creditos: 3 },
+      { nombre: "Laboratorio de Química General", nivel: 1, creditos: 1 },
+      { nombre: "Programación I", nivel: 1, creditos: 4 },
+      { nombre: "Laboratorio de Comunicación 1", nivel: 1, creditos: 3 },
+      { nombre: "Introducción a la Ingeniería Industrial", nivel: 1, creditos: 2 },
+      { nombre: "Proyectos Interdisciplinarios 1", nivel: 1, creditos: 3 },
+
+      { nombre: "Cálculo Vectorial", nivel: 2, creditos: 3, prerequisitos: ["Cálculo de una variable"] },
+      { nombre: "Estadística y Probabilidades I", nivel: 2, creditos: 4, prerequisitos: ["Cálculo de una variable", "Programación I"] },
+      { nombre: "Introducción a la Mecánica", nivel: 2, creditos: 4, prerequisitos: ["Cálculo de una variable"] },
+      { nombre: "Ciencia de los Materiales", nivel: 2, creditos: 3, prerequisitos: ["Química General"] },
+      { nombre: "Laboratorio de Comunicación 2", nivel: 2, creditos: 3, prerequisitos: ["Laboratorio de Comunicación 1"] },
+      { nombre: "Perú: Temas de la sociedad contemporánea", nivel: 2, creditos: 3},
+
+      { nombre: "Álgebra Lineal", nivel: 3, creditos: 2, prerequisitos: ["Cálculo de una variable"] },
+      { nombre: "Ecuaciones Diferenciales", nivel: 3, creditos: 3, prerequisitos: ["Cálculo Vectorial"] },
+      { nombre: "Programación II", nivel: 3, creditos: 4, prerequisitos: ["Programación I"] },
+      { nombre: "Empresa y Consumidor", nivel: 3, creditos: 3 },
+      { nombre: "Estadística Aplicada", nivel: 3, creditos: 4, prerequisitos: ["Estadística y Probabilidades I"] },
+      { nombre: "Fundamentos de Operaciones", nivel: 3, creditos: 4, prerequisitos: ["Estadística y Probabilidades I"] },
+
+      { nombre: "Fund. Electricidad y Magnetismo", nivel: 4, creditos: 4, prerequisitos: ["Cálculo de una variable"] },
+      { nombre: "Métodos Numéricos", nivel: 4, creditos: 3, prerequisitos: ["Álgebra Lineal", "Ecuaciones Diferenciales"] },
+      { nombre: "Economía, Gobernanza y Relaciones de Poder", nivel: 4, creditos: 3 },
+      { nombre: "IO I: Modelos Determinísticos", nivel: 4, creditos: 4, prerequisitos: ["Programación II", "Álgebra Lineal"] },
+      { nombre: "Gestión de Costos", nivel: 4, creditos: 4, prerequisitos: ["Estadística y Probabilidades I"] },
+      { nombre: "Proyectos Interdisciplinarios 2", nivel: 4, creditos: 3, prerequisitos: ["Proyectos Interdisciplinarios 1"] },
+
+      { nombre: "Finanzas Empresariales", nivel: 5, creditos: 3, prerequisitos: ["Empresa y Consumidor"] },
+      { nombre: "Diseño Productos/Servicios", nivel: 5, creditos: 4, prerequisitos: ["Gestión de Costos", "Fundamentos de Operaciones"] },
+      { nombre: "Salud y Seguridad Ocupacional", nivel: 5, creditos: 3 },
+      { nombre: "Ingeniería Financiera", nivel: 5, creditos: 4, prerequisitos: ["Estadística y Probabilidades I"] },
+      { nombre: "IO II: Modelos Probabilísticos", nivel: 5, creditos: 4, prerequisitos: ["Estadística Aplicada"] },
+      { nombre: "Planificación y Control de Operaciones", nivel: 5, creditos: 4, prerequisitos: ["IO I: Modelos Determinísticos", "Gestión de Costos"] },
+
+      { nombre: "Gestión de la Calidad", nivel: 6, creditos: 4, prerequisitos: ["Estadística y Probabilidades I"] },
+      { nombre: "Simulación de Operaciones", nivel: 6, creditos: 4, prerequisitos: ["IO II: Modelos Probabilísticos"] },
+      { nombre: "Gestión de la Cadena de Suministros", nivel: 6, creditos: 4, prerequisitos: ["Planificación y Control de Operaciones"] },
+      { nombre: "Análisis y Diseño de Sistemas", nivel: 6, creditos: 4, prerequisitos: ["Fundamentos de Operaciones"] },
+      { nombre: "Sistemas de Información para Operaciones", nivel: 6, creditos: 4, prerequisitos: ["Planificación y Control de Operaciones"] },
+
+      { nombre: "Electivo 1: Transformación digital", nivel: 7, creditos: 2 },
+      { nombre: "Electivo 1: Emprendimiento e Innovación con enfoque digital", nivel: 7, creditos: 2 },
+      { nombre: "Arte y Tecnología", nivel: 7, creditos: 3 },
+      { nombre: "Lean Six Sigma", nivel: 7, creditos: 4, prerequisitos: ["Estadística Aplicada", "Gestión de la Calidad"] },
+      { nombre: "Data Analytics", nivel: 7, creditos: 4, prerequisitos: ["Álgebra Lineal", "Estadística Aplicada"] },
+      { nombre: "Gestión de Proyectos de Ingeniería", nivel: 7, creditos: 4, prerequisitos: ["Gestión de Costos"] },
+      { nombre: "Proyectos Interdisciplinarios 3", nivel: 7, creditos: 3, prerequisitos: ["Proyectos Interdisciplinarios 2"] },
+      
+      { nombre: "Electivo 2: Desarrollo de Soluciones Empresariales", nivel: 8, creditos: 4 },
+      { nombre: "Evaluación Financiera de Proyectos", nivel: 8, creditos: 3, prerequisitos: ["Finanzas Empresariales"] },
+      { nombre: "Proyecto Preprofesional", nivel: 8, creditos: 8, prerequisitos: ["100 Créditos"] },
+
+      { nombre: "Electivo 3: Gloabal Academy Pendiente (2 crd)", nivel: 9, creditos: 2 },
+      { nombre: "Electivo 3: Gloabal Academy Pendiente (2 crd)", nivel: 9, creditos: 2 },
+      { nombre: "Electivo 4: Gestión de la Innovación", nivel: 9, creditos: 4 },
+      { nombre: "Estrategia y Organizaciones", nivel: 10, creditos: 3, prerequisitos: ["Evaluación Financiera de Proyectos"] },
+      { nombre: "Ética y Tecnología", nivel: 9, creditos: 3 },
+      { nombre: "Ciencia de la Decisión y Dinámica de Sistemas", nivel: 9, creditos: 4, prerequisitos: ["IO II: Modelos Probabilísticos"] },
+      { nombre: "Proyecto Final de Ingeniería Industrial - Trabajo de Investigación I", nivel: 9, creditos: 4, prerequisitos: ["130 Créditos"] },
+      
+      { nombre: "Electivo 5: Diseño y Gestión de Servicios", nivel: 10, creditos: 4 },
+      { nombre: "Electivo 6: Business Process Analytics", nivel: 10, creditos: 4 },
+      { nombre: "Comportamiento Organizacional", nivel: 10, creditos: 3, prerequisitos: ["Planificación y Control de Operaciones"] },
+      { nombre: "Estrategia de Operaciones", nivel: 10, creditos: 3, prerequisitos: ["Gestión de la Cadena de Suministros"] },
+      { nombre: "Trabajo de Investigación", nivel: 10, creditos: 4, prerequisitos: ["Proyecto Final de Ingeniería Industrial - Trabajo de Investigación I"] }
+    ];
+
+    const malla = document.getElementById('malla');
+    const progreso = document.getElementById('progreso');
+    const creditosSpan = document.getElementById('creditos');
+
+    const TOTAL_CREDITOS = cursos.reduce((acc, c) => acc + (c.creditos || 0), 0);
+    const años = [
+      { etiqueta: '1° año', niveles: [1, 2] },
+      { etiqueta: '2° año', niveles: [3, 4] },
+      { etiqueta: '3° año', niveles: [5, 6] },
+      { etiqueta: '4° año', niveles: [7, 8] },
+      { etiqueta: '5° año', niveles: [9, 10] }
+    ];
+
+    let completados = JSON.parse(localStorage.getItem('cursosAprobados') || '[]');
+
+    function creditosCompletados() {
+      return cursos.filter(c => completados.includes(c.nombre)).reduce((acc, c) => acc + (c.creditos || 0), 0);
+    }
+
+    function actualizarProgreso() {
+      const completadosAhora = creditosCompletados();
+      const porcentaje = Math.round((completadosAhora / TOTAL_CREDITOS) * 100);
+      progreso.textContent = porcentaje + '%';
+      creditosSpan.textContent = completadosAhora;
+    }
+
+    function renderMalla() {
+      malla.innerHTML = '';
+      const creditosAhora = creditosCompletados();
+
+      años.forEach(año => {
+        const columna = document.createElement('div');
+        columna.className = 'año';
+
+        const etiqueta = document.createElement('div');
+        etiqueta.className = 'etiqueta-año';
+        etiqueta.textContent = año.etiqueta;
+        columna.appendChild(etiqueta);
+
+        año.niveles.forEach(nivel => {
+          const bloque = document.createElement('div');
+          bloque.className = 'semestre';
+
+          const titulo = document.createElement('div');
+          titulo.className = 'titulo-semestre';
+          titulo.textContent = `Nivel ${nivel}`;
+
+          const cursosDiv = document.createElement('div');
+          cursosDiv.className = 'cursos';
+
+          const cursosNivel = cursos.filter(c => c.nivel === nivel);
+          cursosNivel.forEach(curso => {
+            const div = document.createElement('div');
+            div.className = 'curso';
+            div.textContent = curso.nombre;
+
+            // Evaluar si los prerequisitos se cumplen (por nombre o por créditos)
+            const cumplidos = !curso.prerequisitos || curso.prerequisitos.every(p =>
+              completados.includes(p) || (!isNaN(parseInt(p)) && creditosAhora >= parseInt(p))
+            );
+
+            // Evaluar si al menos uno de los prerequisitos es por créditos cumplidos
+            const tieneCreditos = curso.prerequisitos && curso.prerequisitos.some(p =>
+              !isNaN(parseInt(p)) && creditosAhora >= parseInt(p)
+            );
+
+            if (completados.includes(curso.nombre)) {
+              div.classList.add('aprobado');
+            } else if (nivel === 1 || tieneCreditos) {
+              div.classList.add('credito-habilitado');
+            } else if (cumplidos) {
+              div.classList.add('habilitado');
+            } else {
+              div.classList.add('bloqueado');
+            }
+
+            div.addEventListener('click', () => {
+              if (!div.classList.contains('bloqueado')) {
+                if (completados.includes(curso.nombre)) {
+                  completados = completados.filter(c => c !== curso.nombre);
+                } else {
+                  completados.push(curso.nombre);
+                }
+                localStorage.setItem('cursosAprobados', JSON.stringify(completados));
+                renderMalla();
+                actualizarProgreso();
+              }
+            });
+
+            cursosDiv.appendChild(div);
+          });
+
+          bloque.appendChild(titulo);
+          bloque.appendChild(cursosDiv);
+          columna.appendChild(bloque);
+        });
+
+        malla.appendChild(columna);
+      });
+      actualizarProgreso();
+    }
+
+    renderMalla();
+  </script>
+</body>
+</html>
